@@ -1,0 +1,6 @@
+/home/renmichel/.clion/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/renmichel/.clion/bin/ninja/linux/ninja -G Ninja -S /home/renmichel/CLionProjects/test -B /home/renmichel/CLionProjects/test/cmake-build-debug
+-- Checking for module 'glut'
+--   No package 'glut' found
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/renmichel/CLionProjects/test/cmake-build-debug
