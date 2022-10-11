@@ -38,7 +38,7 @@ void Road::drawRoad()
         glVertex3f(4,this->width*-1,-1.4);
     glEnd();
 
-    //faixas laterais
+    //faixa lateral
     glBegin(GL_QUADS);
     glColor3f(1, 1, 1);
         glVertex3f(-4,this->width*-1, -1.39);
@@ -47,6 +47,7 @@ void Road::drawRoad()
         glVertex3f(-3.7,this->width*-1,-1.39);
     glEnd();
 
+    //faixa lateral
     glBegin(GL_QUADS);
         glVertex3f(4,this->width*-1, -1.39);
         glVertex3f(4,this->width,-1.39);

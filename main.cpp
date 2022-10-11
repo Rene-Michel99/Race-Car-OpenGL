@@ -1,7 +1,6 @@
 #include <GL/glut.h>
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
-#include <stdio.h>
 #include <random>
 
 #include "Classes/car.h"
@@ -17,7 +16,7 @@ int NUM_OBSTACLES = 10;
 Car car(
         glm::vec3(1,1,0),
         glm::vec3(0,0,0),
-        0.005,
+        0.007,
         2.7,
         5);
 Road road(250);
@@ -27,25 +26,6 @@ glm::vec3 roadPos(0, 100, 0);
 
 Car *poolCars = new Car[NUM_CARS];
 LightPole *poolObstacles = new LightPole[NUM_OBSTACLES];
-
-//função para desenhar os eixos cartesianos do sistema de coordenadas global (ou de mundo, ou de cenário)
-void eixos()
-{
-    glBegin(GL_LINES);
-    //eixo x em vermelho
-    glColor3f(1,0,0);
-    glVertex3f(0,0,0);
-    glVertex3f(100,0,0);
-    //eixo y em verde
-    glColor3f(0,1,0);
-    glVertex3f(0,0,0);
-    glVertex3f(0,100,0);
-    //eixo z em azul
-    glColor3f(0,0,1);
-    glVertex3f(0,0,0);
-    glVertex3f(0,0,100);
-    glEnd();
-}
 
 
 void drawGround()
@@ -68,15 +48,15 @@ void generateRandomCars()
     std::uniform_real_distribution<> distColor(0, 1);
     std::uniform_real_distribution<> distPosX(-2, 2);
     std::uniform_real_distribution<> distPosY(-100, -2);
-    std::uniform_real_distribution<> distAcc(0.0055, -0.00001);
-    std::uniform_real_distribution<> distMaxVel(1, 5);
+    //std::uniform_real_distribution<> distAcc(0.0055, -0.00001);
+    //std::uniform_real_distribution<> distMaxVel(1, 5);
     for(int i=0; i<5; i++)
     {
         poolCars[i] = Car(
                 glm::vec3(distColor(gen), distColor(gen), distColor(gen)),
                 glm::vec3(distPosX(gen),distPosY(gen),0),
-                distAcc(gen),
-                distMaxVel(gen),
+                0.0045,
+                1.5,
                 5
                 );
     }
@@ -88,14 +68,25 @@ void generateRandomObstacles()
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distHeight(5, 10);
-    std::uniform_real_distribution<> distPosX(-5, -3);
-    std::uniform_real_distribution<> distPosY(-100, 200);
+    std::uniform_real_distribution<> distPosY(200, 350);
     for(int i=0; i<5; i++)
     {
+        double posY = distPosY(gen);
+        double posX = 0;
+        if (int(posY) % 2 == 0) //será colocado na posição da esquerda
+        {
+            std::uniform_real_distribution<> distPosX(-5, -3);
+            posX = distPosX(gen);
+        }
+        else //será colocado na posição da direita
+        {
+            std::uniform_real_distribution<> distPosX(3, 5);
+            posX = distPosX(gen);
+        }
         poolObstacles[i] = LightPole(
-                glm::vec3(distPosX(gen),distPosY(gen),0),
-                distHeight(gen),
-                0.5
+                glm::vec3(posX,posY,0),
+                float(distHeight(gen)),
+                0.25
         );
     }
 }
@@ -117,37 +108,35 @@ void init()
 
 float calcDisplacement()
 {
-    if(roadPos.y > -55) roadPos.y -= (car.velocity * car.time);
+    // cálculo da velocidade baseada no cálculo de deslocamento ignorando a posição
+    if(roadPos.y > -55) roadPos.y -= car.velocity * car.time;
     else roadPos.y = 100;
 }
 
 
-void inputKeyboard(unsigned char key, int x, int y)
+void inputKeyboard(int key, int x, int y)
 {
     switch(key)
     {
-        case 'x': camPos.x -= 1; break; //alterando a coordenada x da câmera
-        case 'X': camPos.x += 1; break;
-        case 'y': camPos.y -= 1; break; //alterando a coordenada y da câmera
-        case 'Y': camPos.y += 1; break;
-        case 'z': camPos.z -= 1; break; //alterando a coordenada z da câmera
-        case 'Z': camPos.z += 1; break;
-        case 'a': if (roadPos.x < 2.8) roadPos.x += 0.1; break;
-        case 'd': if (roadPos.x > -2.8) roadPos.x -= 0.1; break;
-        case 'w': car.increaseVelocity(); break;
-        case 's': car.decreaseVelocity(FRICTION * 10); break;
+        case GLUT_KEY_LEFT: if (roadPos.x < 2.8) roadPos.x += 0.1; break;
+        case GLUT_KEY_RIGHT: if (roadPos.x > -2.8) roadPos.x -= 0.1; break;
+        case GLUT_KEY_UP: car.increaseVelocity(); break;
+        case GLUT_KEY_DOWN: car.decreaseVelocity(FRICTION * 10); break;
+        default: break;
     }
 
-    glutPostRedisplay(); //atualiza o desenho
+    glutPostRedisplay();
 }
+
 
 void timer(int v)
 {
     glutTimerFunc(1000.0/FPS, timer, 0);
-    car.decreaseVelocity(FRICTION/10);
+    car.decreaseVelocity(FRICTION/2); //decrementa um pouco velocidade do carro sendo inferior a aceleração
     calcDisplacement();
     glutPostRedisplay();
 }
+
 
 void handleEnemies()
 {
@@ -161,8 +150,9 @@ void handleEnemies()
         glPopMatrix();
 
         poolCars[i].increaseVelocity();
+        // subtrao a velocidade do jogador na velocidade do adversário fazendo assim que seja possível a ultrapassagem
         poolCars[i].position.y += ((poolCars[i].velocity * poolCars[i].time)) - ((car.velocity * car.time));
-        if(poolCars[i].position.y > 500)
+        if(poolCars[i].position.y > 500) // se o adversário passou muito da tela coloque-o atrás da câmera
         {
             poolCars[i].position.y = -100;
             poolCars[i].velocity *= 0.5;
@@ -177,34 +167,42 @@ void handleObstacles()
     for(int i=0; i<5; i++)
     {
         glPushMatrix();
-        glm::mat4 t_obstacle = glm::translate(I,glm::vec3(poolObstacles[i].position.x + roadPos.x,roadPos.y,0.0));
+        glm::vec3 new_position = glm::vec3(
+                poolObstacles[i].position.x + roadPos.x,
+                poolObstacles[i].position.y,
+                0.0);
+        glm::mat4 t_obstacle = glm::translate(I,new_position);
         glMultMatrixf(glm::value_ptr(t_obstacle));
         poolObstacles[i].draw();
         glPopMatrix();
+
+        // soma a velocidade do carro do jogador para "ir em sua direção na mesma velocidade"
+        poolObstacles[i].position.y -= car.velocity * car.time;
+        if(poolObstacles[i].position.y < -150)
+            poolObstacles[i].position.y = 200;
     }
 }
 
 
 void draw()
 {
-    //limpando o frame buffer, mas também o depth buffer (buffer usado pra remoção de faces ocultas)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //definindo o tipo de projeção
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-1,1,-1,1,7,250); //projeção em perspectiva: glFrustum(left,right,bottom,top,near,far)
+    glFrustum(-1,1,-1,1,7,250);
 
-    //definindo o posicionamento da câmera
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glm::mat4 matrizCamera = glm::lookAt(camPos,            //eye = posição da câmera
-                                         glm::vec3(0,3,1),  //at  = para onde a câmera aponta
-                                         glm::vec3(0,0,1)); //up  = para onde o topo da câmera aponta
-    glMultMatrixf(glm::value_ptr(matrizCamera)); //criada a matriz usando GLM, deve-se enviá-la para OpenGL*/
+    glm::mat4 matrizCamera = glm::lookAt(camPos,
+                                         glm::vec3(0,3,1),
+                                         glm::vec3(0,0,1));
+    glMultMatrixf(glm::value_ptr(matrizCamera));
 
     drawGround();
 
+    // translação da pista
     glPushMatrix();
     glm::mat4 I = glm::mat4(1.0f);
     glm::mat4 t_road = glm::translate(I,glm::vec3(roadPos.x,0,0.0));
@@ -212,19 +210,18 @@ void draw()
     road.drawRoad();
     glPopMatrix();
 
+    //translação das faixas do meio da pista
     glPushMatrix();
     glm::mat4 t_strips = glm::translate(I,glm::vec3(roadPos.x,roadPos.y,0.0));
     glMultMatrixf(glm::value_ptr(t_strips));
     road.drawStrips();
     glPopMatrix();
 
-    handleEnemies();
-    handleObstacles();
+    handleEnemies();    // função para tratar a movimentação dos adversários
+    handleObstacles();  // função para tratar a movimentação dos obstáculos
 
-    car.draw();
-    eixos();
+    car.draw();         // desenha o carro do jogador
 
-    //atualizando o desenho na tela
     glutSwapBuffers();
 }
 
@@ -239,7 +236,7 @@ int main(int argc, char** argv)
     init();
 
     glutDisplayFunc(draw);
-    glutKeyboardUpFunc(inputKeyboard);
+    glutSpecialUpFunc(inputKeyboard);
     glutTimerFunc(1000.0/FPS, timer, 0);
 
     glutMainLoop();

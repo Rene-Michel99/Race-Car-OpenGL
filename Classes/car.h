@@ -22,7 +22,6 @@ public:
             float time = 5);
     void increaseVelocity();
     void decreaseVelocity(float value);
-    void setColor(glm::vec3 color);
     void draw();
 };
 

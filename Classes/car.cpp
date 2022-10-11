@@ -7,57 +7,8 @@
 
 #include "car.h"
 
-GLvoid drawCircle(const GLfloat radius,const GLuint num_vertex)
-{
-    GLfloat vertex[4];
-    GLfloat texcoord[2];
 
-    const GLfloat delta_angle = 2.0*M_PI/num_vertex;
-
-    glEnable(GL_TEXTURE_2D);
-    //glBindTexture(GL_TEXTURE_2D,texID);
-    glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
-    glBegin(GL_TRIANGLE_FAN);
-
-    //draw the vertex at the center of the circle
-    texcoord[0] = 0.5;
-    texcoord[1] = 0.5;
-    glTexCoord2fv(texcoord);
-
-    vertex[0] = vertex[1] = vertex[2] = 0.0;
-    vertex[3] = 1.0;
-    glVertex4fv(vertex);
-
-    for(int i = 0; i < num_vertex ; i++)
-    {
-        texcoord[0] = (std::cos(delta_angle*i) + 1.0)*0.5;
-        texcoord[1] = (std::sin(delta_angle*i) + 1.0)*0.5;
-        glTexCoord2fv(texcoord);
-
-        vertex[0] = std::cos(delta_angle*i) * radius;
-        vertex[1] = std::sin(delta_angle*i) * radius;
-        vertex[2] = 0.0;
-        vertex[3] = 1.0;
-        glColor3f(1, 0, 0);
-        glVertex4fv(vertex);
-    }
-
-    texcoord[0] = (1.0 + 1.0)*0.5;
-    texcoord[1] = (0.0 + 1.0)*0.5;
-    glTexCoord2fv(texcoord);
-
-    vertex[0] = 1.0 * radius;
-    vertex[1] = 0.0 * radius;
-    vertex[2] = 0.0;
-    vertex[3] = 1.0;
-    glVertex4fv(vertex);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-}
-
-
-GLvoid drawBase()
+void drawBase()
 {
     glBegin(GL_QUADS);
         glVertex3f(-0.8,-4, 0.4);
@@ -74,7 +25,7 @@ GLvoid drawBase()
     glEnd();
 }
 
-GLvoid drawRoof()
+void drawRoof()
 {
     glBegin(GL_QUADS);
         glVertex3f(-0.8,-2, 1.31);
@@ -85,7 +36,7 @@ GLvoid drawRoof()
 }
 
 
-GLvoid drawFrontLights()
+void drawFrontLights()
 {
     glBegin(GL_QUADS);
         glColor3f(1, 1, 1);
@@ -104,7 +55,7 @@ GLvoid drawFrontLights()
 }
 
 
-GLvoid drawFrontRear()
+void drawFrontRear()
 {
     glBegin(GL_QUADS);
         glColor3f(0.2, 0.2, 0.2);
@@ -116,7 +67,7 @@ GLvoid drawFrontRear()
 }
 
 
-GLvoid drawFront()
+void drawFront()
 {
     glBegin(GL_QUADS);
         glVertex3f(-0.8,0, -0.3);
@@ -127,7 +78,7 @@ GLvoid drawFront()
 }
 
 
-GLvoid drawFrontWindow()
+void drawFrontWindow()
 {
     glBegin(GL_QUADS);
         glColor3f(0, 1, 1);
@@ -139,7 +90,7 @@ GLvoid drawFrontWindow()
 }
 
 
-GLvoid drawBackRear()
+void drawBackRear()
 {
     glBegin(GL_QUADS);
         glColor3f(0.2, 0.2, 0.2);
@@ -150,7 +101,7 @@ GLvoid drawBackRear()
     glEnd();
 }
 
-GLvoid drawBack()
+void drawBack()
 {
     glBegin(GL_QUADS);
         glVertex3f(-0.8,-4, -0.3);
@@ -161,7 +112,7 @@ GLvoid drawBack()
 }
 
 
-GLvoid drawBackLights()
+void drawBackLights()
 {
     glBegin(GL_QUADS);
         glColor3f(1, 0, 0);
@@ -180,7 +131,7 @@ GLvoid drawBackLights()
 }
 
 
-GLvoid drawBackWindow()
+void drawBackWindow()
 {
     glBegin(GL_QUADS);
         glColor3f(0, 1, 1);
@@ -217,7 +168,7 @@ void drawCylinder(float radius, float width, float end_width, bool is_front)
     glEnd();
 }
 
-GLvoid drawLaterals()
+void drawLaterals()
 {
     glBegin(GL_QUADS);
         glVertex3f(0.9,0, -1);
@@ -258,6 +209,7 @@ void Car::drawMode(int mode, glm::vec3 color)
 {
     glPolygonMode(GL_FRONT_AND_BACK, mode);
 
+    // desenha as rodas
     drawCylinder(-0.5, 0.9, 1.3, true);
     drawCylinder(0.5, -0.8, -1.2, true);
     drawCylinder(0.5, -0.8, -1.2, false);
@@ -282,8 +234,6 @@ void Car::drawMode(int mode, glm::vec3 color)
 
     glColor3f(color.r, color.g, color.b);
     drawRoof();
-
-    //drawCircle(1.0, 25);
 }
 
 Car::Car(glm::vec3 color, glm::vec3 position, float acceleration, float maxVelocity, float time){
@@ -299,9 +249,6 @@ Car::Car(glm::vec3 color, glm::vec3 position, float acceleration, float maxVeloc
     this->time = time;
 }
 
-void Car::setColor(glm::vec3 color){
-    this->color = color;
-}
 
 void Car::draw(){
     drawMode(GL_FILL, color);
