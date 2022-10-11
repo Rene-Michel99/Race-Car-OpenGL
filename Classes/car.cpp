@@ -204,7 +204,8 @@ void drawCylinder(float radius, float width, float end_width, bool is_front)
 
     glBegin(GL_QUAD_STRIP);
     glColor3f(0.05, 0.05, 0.05);
-    while( angle < 2*PI ) {
+    while( angle < 2*PI )
+    {
         z = radius * cos(angle) - z_pos;
         y = radius * sin(angle) - y_pos;
         glVertex3f(end_width, y , z);

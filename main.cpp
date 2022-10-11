@@ -8,6 +8,7 @@
 #include "Classes/road.h"
 #include "Classes/light_pole.h"
 
+
 float FRICTION = 0.0023;
 float FPS = 60;
 int NUM_CARS = 10;
@@ -25,7 +26,7 @@ glm::vec3 camPos(0,-30,4);         //posição inicial da câmera
 glm::vec3 roadPos(0, 100, 0);
 
 Car *poolCars = new Car[NUM_CARS];
-LightPole *poolLightPoles = new LightPole[NUM_OBSTACLES];
+LightPole *poolObstacles = new LightPole[NUM_OBSTACLES];
 
 //função para desenhar os eixos cartesianos do sistema de coordenadas global (ou de mundo, ou de cenário)
 void eixos()
@@ -82,6 +83,24 @@ void generateRandomCars()
 }
 
 
+void generateRandomObstacles()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> distHeight(5, 10);
+    std::uniform_real_distribution<> distPosX(-5, -3);
+    std::uniform_real_distribution<> distPosY(-100, 200);
+    for(int i=0; i<5; i++)
+    {
+        poolObstacles[i] = LightPole(
+                glm::vec3(distPosX(gen),distPosY(gen),0),
+                distHeight(gen),
+                0.5
+        );
+    }
+}
+
+
 void init()
 {
     glClearColor(0.0, 0.0, 0.45, 1.0); //cor de fundo (preto)
@@ -90,7 +109,9 @@ void init()
     glDepthFunc(GL_LESS);
     glLineWidth(3);                   //largura de todas as linhas desenhadas
     glEnable(GL_MULTISAMPLE);         //habilita um tipo de antialiasing (melhora serrilhado)
+
     generateRandomCars();
+    generateRandomObstacles();
 }
 
 
@@ -150,6 +171,20 @@ void handleEnemies()
 }
 
 
+void handleObstacles()
+{
+    glm::mat4 I = glm::mat4(1.0f);
+    for(int i=0; i<5; i++)
+    {
+        glPushMatrix();
+        glm::mat4 t_obstacle = glm::translate(I,glm::vec3(poolObstacles[i].position.x + roadPos.x,roadPos.y,0.0));
+        glMultMatrixf(glm::value_ptr(t_obstacle));
+        poolObstacles[i].draw();
+        glPopMatrix();
+    }
+}
+
+
 void draw()
 {
     //limpando o frame buffer, mas também o depth buffer (buffer usado pra remoção de faces ocultas)
@@ -184,6 +219,7 @@ void draw()
     glPopMatrix();
 
     handleEnemies();
+    handleObstacles();
 
     car.draw();
     eixos();

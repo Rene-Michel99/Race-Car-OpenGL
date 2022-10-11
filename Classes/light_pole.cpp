@@ -7,7 +7,14 @@
 #include "light_pole.h"
 
 
-LightPole::LightPole(float height, float radius)
+LightPole::LightPole(glm::vec3 position, float height, float radius)
+{
+    this->position = position;
+    this->height = height;
+    this->radius = radius;
+}
+
+void LightPole::draw()
 {
     float x              = 0.0;
     float y              = 0.0;
@@ -16,15 +23,16 @@ LightPole::LightPole(float height, float radius)
     float PI =  3.1415927;
 
     glBegin(GL_QUAD_STRIP);
-    glColor3f(0.05, 0.05, 0.05);
-    while( angle < 2*PI ) {
-        x = radius * cos(angle);
-        y = radius * sin(angle);
-        glVertex3f(x, y , height);
-        glVertex3f(0, y , 0);
+    glColor3f(0.67, 0.67, 0.67);
+    while( angle < 2*PI )
+    {
+        x = this->radius * cos(angle);
+        y = this->radius * sin(angle);
+        glVertex3f(x, y , this->height);
+        glVertex3f(x, y , 0);
         angle = angle + angle_stepsize;
     }
-    glVertex3f(radius, y, height);
-    glVertex3f(radius, y, height);
+    glVertex3f(this->radius, y, this->height);
+    glVertex3f(this->radius, y, this->height);
     glEnd();
 }
