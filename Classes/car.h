@@ -23,6 +23,7 @@ public:
     void increaseVelocity();
     void decreaseVelocity(float value);
     void draw();
+    void moveHorizontal(float x);
 };
 
 #endif // CAR_H

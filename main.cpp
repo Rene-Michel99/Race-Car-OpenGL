@@ -2,6 +2,7 @@
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 #include <random>
+#include <vector>
 
 #include "Classes/car.h"
 #include "Classes/road.h"
@@ -12,6 +13,7 @@ float FRICTION = 0.0023;
 float FPS = 60;
 int NUM_CARS = 10;
 int NUM_OBSTACLES = 10;
+const float MAX_DIR = 2.5, MAX_LEFT = -2.5;
 
 Car car(
         glm::vec3(1,1,0),
@@ -21,7 +23,8 @@ Car car(
         5);
 Road road(250);
 
-glm::vec3 camPos(0,-30,4);         //posição inicial da câmera
+glm::vec3 camPos(0,-30,4);
+glm::vec3 at(0,3,1);//posição inicial da câmera
 glm::vec3 roadPos(0, 100, 0);
 
 Car *poolCars = new Car[NUM_CARS];
@@ -47,7 +50,7 @@ void generateRandomCars()
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distColor(0, 1);
     std::uniform_real_distribution<> distPosX(-2, 2);
-    std::uniform_real_distribution<> distPosY(-100, -2);
+    std::uniform_real_distribution<> distPosY(-250, 0);
     //std::uniform_real_distribution<> distAcc(0.0055, -0.00001);
     //std::uniform_real_distribution<> distMaxVel(1, 5);
     for(int i=0; i<5; i++)
@@ -68,12 +71,13 @@ void generateRandomObstacles()
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distHeight(5, 10);
-    std::uniform_real_distribution<> distPosY(200, 350);
+    std::uniform_real_distribution<> distPosY(0, 350);
     for(int i=0; i<5; i++)
     {
         double posY = distPosY(gen);
         double posX = 0;
-        if (int(posY) % 2 == 0) //será colocado na posição da esquerda
+        bool isLeft = true;
+        if (i % 2 == 0) //será colocado na posição da esquerda
         {
             std::uniform_real_distribution<> distPosX(-5, -3);
             posX = distPosX(gen);
@@ -82,11 +86,13 @@ void generateRandomObstacles()
         {
             std::uniform_real_distribution<> distPosX(3, 5);
             posX = distPosX(gen);
+            isLeft = false;
         }
         poolObstacles[i] = LightPole(
                 glm::vec3(posX,posY,0),
                 float(distHeight(gen)),
-                0.25
+                0.25,
+                isLeft
         );
     }
 }
@@ -106,7 +112,7 @@ void init()
 }
 
 
-float calcDisplacement()
+void calcDisplacement()
 {
     // cálculo da velocidade baseada no cálculo de deslocamento ignorando a posição
     if(roadPos.y > -55) roadPos.y -= car.velocity * car.time;
@@ -118,8 +124,19 @@ void inputKeyboard(int key, int x, int y)
 {
     switch(key)
     {
-        case GLUT_KEY_LEFT: if (roadPos.x < 2.8) roadPos.x += 0.1; break;
-        case GLUT_KEY_RIGHT: if (roadPos.x > -2.8) roadPos.x -= 0.1; break;
+        case GLUT_KEY_LEFT:
+            if (car.position.x > MAX_LEFT){
+                car.moveHorizontal(-0.1);
+                camPos.x -= 0.1;
+                at.x -= 0.1;
+            }
+            break;
+        case GLUT_KEY_RIGHT:
+            if (car.position.x < MAX_DIR){
+                car.moveHorizontal(0.1);
+                camPos.x += 0.1;
+                at.x += 0.1;
+            } break;
         case GLUT_KEY_UP: car.increaseVelocity(); break;
         case GLUT_KEY_DOWN: car.decreaseVelocity(FRICTION * 10); break;
         default: break;
@@ -140,22 +157,25 @@ void timer(int v)
 
 void handleEnemies()
 {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> distPosX(-2, 2);
     glm::mat4 I = glm::mat4(1.0f);
     for(int i=0; i<5; i++)
     {
         glPushMatrix();
-        glm::mat4 t_enemy = glm::translate(I,glm::vec3(poolCars[i].position.x + roadPos.x,poolCars[i].position.y,0.0));
+        glm::mat4 t_enemy = glm::translate(I,glm::vec3(poolCars[i].position.x,poolCars[i].position.y,0.0));
         glMultMatrixf(glm::value_ptr(t_enemy));
         poolCars[i].draw();
         glPopMatrix();
 
         poolCars[i].increaseVelocity();
-        // subtrao a velocidade do jogador na velocidade do adversário fazendo assim que seja possível a ultrapassagem
+        // subtrai a velocidade do jogador na velocidade do adversário fazendo assim que seja possível a ultrapassagem
         poolCars[i].position.y += ((poolCars[i].velocity * poolCars[i].time)) - ((car.velocity * car.time));
-        if(poolCars[i].position.y > 500) // se o adversário passou muito da tela coloque-o atrás da câmera
+        if(poolCars[i].position.y < -250) // se o adversário passou muito da tela coloque-o atrás da câmera
         {
-            poolCars[i].position.y = -100;
-            poolCars[i].velocity *= 0.5;
+            poolCars[i].position.y = 500;
+            poolCars[i].position.x = distPosX(gen);
         }
     }
 }
@@ -168,7 +188,7 @@ void handleObstacles()
     {
         glPushMatrix();
         glm::vec3 new_position = glm::vec3(
-                poolObstacles[i].position.x + roadPos.x,
+                poolObstacles[i].position.x,
                 poolObstacles[i].position.y,
                 0.0);
         glm::mat4 t_obstacle = glm::translate(I,new_position);
@@ -196,7 +216,7 @@ void draw()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glm::mat4 matrizCamera = glm::lookAt(camPos,
-                                         glm::vec3(0,3,1),
+                                         at,
                                          glm::vec3(0,0,1));
     glMultMatrixf(glm::value_ptr(matrizCamera));
 
@@ -220,7 +240,9 @@ void draw()
     handleEnemies();    // função para tratar a movimentação dos adversários
     handleObstacles();  // função para tratar a movimentação dos obstáculos
 
+    glPushMatrix();
     car.draw();         // desenha o carro do jogador
+    glPopMatrix();
 
     glutSwapBuffers();
 }
@@ -231,7 +253,7 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_MULTISAMPLE | GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowPosition(500,500);
     glutInitWindowSize(1080,720);
-    glutCreateWindow("Camera e Visualizacao 3D");
+    glutCreateWindow("F1 RACE");
 
     init();
 

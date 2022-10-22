@@ -7,6 +7,8 @@
 
 #include "car.h"
 
+const float PI = 3.1415927;
+
 
 void drawBase()
 {
@@ -148,7 +150,6 @@ void drawCylinder(float radius, float width, float end_width, bool is_front)
     float y              = 0.0;
     float angle          = 0.0;
     float angle_stepsize = 0.1;
-    float PI =  3.1415927;
     float z_pos = 0.8, y_pos = 0.5;
 
     if(!is_front) y_pos = 3.5;
@@ -163,8 +164,8 @@ void drawCylinder(float radius, float width, float end_width, bool is_front)
         glVertex3f(width, y , z);
         angle = angle + angle_stepsize;
     }
-    glVertex3f(width, y, radius - 0.8);
-    glVertex3f(end_width, y, radius - 0.8);
+    glVertex3f(width, y, radius - z_pos);
+    glVertex3f(end_width, y, radius - z_pos);
     glEnd();
 }
 
@@ -191,6 +192,11 @@ float max(float num1, float num2)
 {
     if(num1 > num2) return num1;
     return num2;
+}
+
+void Car::moveHorizontal(float x)
+{
+    this->position.x += x;
 }
 
 
@@ -251,6 +257,7 @@ Car::Car(glm::vec3 color, glm::vec3 position, float acceleration, float maxVeloc
 
 
 void Car::draw(){
+    glTranslatef(this->position.x, this->position.y, this->position.z);
     drawMode(GL_FILL, color);
     drawMode(GL_LINE, glm::vec3(0));
 }
