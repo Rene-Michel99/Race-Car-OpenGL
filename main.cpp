@@ -24,7 +24,7 @@ Car car(
 Road road(250);
 
 glm::vec3 camPos(0,-30,4);
-glm::vec3 at(0,3,1);//posição inicial da câmera
+glm::vec3 at(0,3,1);
 glm::vec3 roadPos(0, 100, 0);
 
 Car *poolCars = new Car[NUM_CARS];
@@ -53,7 +53,7 @@ void generateRandomCars()
     std::uniform_real_distribution<> distPosY(-250, 0);
     //std::uniform_real_distribution<> distAcc(0.0055, -0.00001);
     //std::uniform_real_distribution<> distMaxVel(1, 5);
-    for(int i=0; i<5; i++)
+    for(int i=0; i<NUM_CARS; i++)
     {
         poolCars[i] = Car(
                 glm::vec3(distColor(gen), distColor(gen), distColor(gen)),
@@ -72,7 +72,7 @@ void generateRandomObstacles()
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distHeight(5, 10);
     std::uniform_real_distribution<> distPosY(0, 350);
-    for(int i=0; i<5; i++)
+    for(int i=0; i<NUM_OBSTACLES; i++)
     {
         double posY = distPosY(gen);
         double posX = 0;
@@ -161,7 +161,7 @@ void handleEnemies()
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distPosX(-2, 2);
     glm::mat4 I = glm::mat4(1.0f);
-    for(int i=0; i<5; i++)
+    for(int i=0; i<NUM_OBSTACLES; i++)
     {
         glPushMatrix();
         glm::mat4 t_enemy = glm::translate(I,glm::vec3(poolCars[i].position.x,poolCars[i].position.y,0.0));
@@ -184,7 +184,7 @@ void handleEnemies()
 void handleObstacles()
 {
     glm::mat4 I = glm::mat4(1.0f);
-    for(int i=0; i<5; i++)
+    for(int i=0; i<NUM_CARS; i++)
     {
         glPushMatrix();
         glm::vec3 new_position = glm::vec3(

@@ -33,21 +33,24 @@ void drawArm(float height, float width)
 }
 
 
-void drawSphere(double radius, int lats, int longs, float height, float posX) {
+void drawSphere(double radius, int latsX, int longsY, float height, float posX)
+{
     int i, j;
     glColor3f(1, 1, 0);
-    for(i = 0; i <= lats; i++) {
-        double lat0 = PI * (-0.5 + (double) (i - 1) / lats);
+    for(i = 0; i <= latsX; i++)
+    {
+        double lat0 = PI * (-0.5 + (double) (i - 1) / latsX);
         double z0  = sin(lat0);
         double zr0 =  cos(lat0);
 
-        double lat1 = PI * (-0.5 + (double) i / lats);
+        double lat1 = PI * (-0.5 + (double) i / latsX);
         double z1 = sin(lat1);
         double zr1 = cos(lat1);
 
         glBegin(GL_QUAD_STRIP);
-        for(j = 0; j <= longs; j++) {
-            double lng = 2 * PI * (double) (j - 1) / longs;
+        for(j = 0; j <= longsY; j++)
+        {
+            double lng = 2 * PI * (double) (j - 1) / longsY;
             double x = cos(lng);
             double y = sin(lng);
 
@@ -99,7 +102,8 @@ void LightPole::drawMode(int mode, glm::vec3 color, float widthArm)
 }
 
 
-void LightPole::draw(){
+void LightPole::draw()
+{
     float widthArm = 2.5;
     if(!this->isLeft) widthArm = -2.5;
     drawMode(GL_FILL, glm::vec3(0.67, 0.67, 0.67), widthArm);
